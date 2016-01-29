@@ -77,6 +77,7 @@ api_json_files_data = json.loads(api_json_files_string)
 
 dev_json_files_string = json_files_string.replace("APIasg", stack_name + "DevPortalasg")
 dev_json_files_string = dev_json_files_string.replace("/CoreAPIs.zip", '/' + version + "/DeveloperAPIs.zip")
+dev_json_files_string = dev_json_files_string.replace("\CoreAPIs.zip","\DeveloperAPIs.zip")
 dev_json_files_data = json.loads(dev_json_files_string)
 dev_json_commands_string = json_commands_string.replace("CoreAPIs", "DeveloperAPIs")
 dev_json_commands_data = json.loads(dev_json_commands_string)

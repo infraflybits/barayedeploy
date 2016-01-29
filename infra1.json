@@ -863,10 +863,6 @@
         "AWS::CloudFormation::Init": {
           "config": {
             "files": {
-              "D:\\flybits\\CoreAPIs.zip": {
-                "source": "https://s3-us-west-2.amazonaws.com/flybits-artifacts/2.1.0/DeveloperAPIs.zip",
-                "authentication": "S3AccessCreds"
-              },
               "C:\\cfn\\cfn-hup.conf": {
                 "content": {
                   "Fn::Join": [
@@ -906,6 +902,10 @@
                     ]
                   ]
                 }
+              },
+              "D:\\flybits\\DeveloperAPIs.zip": {
+                "source": "https://s3-us-west-2.amazonaws.com/flybits-artifacts/2.1.0/DeveloperAPIs.zip",
+                "authentication": "S3AccessCreds"
               }
             },
             "sources": {},
