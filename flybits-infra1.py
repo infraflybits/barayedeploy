@@ -69,6 +69,7 @@ with open('templates/api_commands.cfn') as api_json_commands:
   api_json_commands_data = json.load(api_json_commands)
 
 json_files_string = json.dumps(api_json_files_data)
+json_commands_string = json.dumps(api_json_commands_data)
 
 api_json_files_string = json_files_string.replace("APIasg", stack_name + "APIasg")
 api_json_files_string = api_json_files_string.replace("/CoreAPIs.zip", '/' + version + "/CoreAPIs.zip")
@@ -77,6 +78,8 @@ api_json_files_data = json.loads(api_json_files_string)
 dev_json_files_string = json_files_string.replace("APIasg", stack_name + "DevPortalasg")
 dev_json_files_string = dev_json_files_string.replace("/CoreAPIs.zip", '/' + version + "/DeveloperAPIs.zip")
 dev_json_files_data = json.loads(dev_json_files_string)
+dev_json_commands_string = json_commands_string.replace("CoreAPIs", "DeveloperAPIs")
+dev_json_commands_data = json.loads(dev_json_commands_string)
 
 staff_json_files_string = json_files_string.replace("APIasg", stack_name + "StaffPortalasg")
 staff_json_files_string = staff_json_files_string.replace("/CoreAPIs.zip", '/' + version + "/StaffAPIs.zip")
@@ -627,7 +630,7 @@ devportal_asg_attributes = [
         "AWS::CloudFormation::Init": {
                 "config": {
                     "sources": {},
-                    "commands": {},
+                    "commands": dev_json_commands_data,
                     "files":  dev_json_files_data,
                     "services": api_json_services_data
                 }

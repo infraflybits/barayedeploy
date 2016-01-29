@@ -909,7 +909,13 @@
               }
             },
             "sources": {},
-            "commands": {},
+            "commands": {
+              "0_unzip": {
+                "ignoreErrors": true,
+                "command": "c:/\"Program Files\"/7-Zip/7z.exe e D:/flybits/DeveloperAPIs.zip  -oD:/temp -aoa",
+                "waitAfterCompletion": "0"
+              }
+            },
             "services": {
               "windows": {
                 "cfn-hup": {
