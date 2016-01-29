@@ -1,0 +1,12 @@
+{
+              "windows": {
+                "cfn-hup": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-init.conf"
+                  ]
+                }
+              }
+}

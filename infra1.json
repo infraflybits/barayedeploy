@@ -1,0 +1,2074 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "FlybitsProductionTemplate",
+  "Resources": {
+    "ProductionVPCfb": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "EnableDnsSupport": "true",
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": "true",
+        "Tags": [
+          {
+            "Value": "ProductionVPCfb",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "ProductionGateway": {
+      "Type": "AWS::EC2::InternetGateway"
+    },
+    "ProductionRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "GatewayId": {
+          "Ref": "ProductionGateway"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "VPCGWAttach": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "InternetGatewayId": {
+          "Ref": "ProductionGateway"
+        }
+      }
+    },
+    "ProductionRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        }
+      }
+    },
+    "APISUBNET1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.10.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionAPISUBNET1",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "APISUBNET2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.11.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionAPISUBNET2",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "APISUBNET3": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            3,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.12.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionAPISUBNET3",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "ApiSubnetRouteAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "APISUBNET1"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "ApiSubnetRouteAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "APISUBNET2"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "ApiSubnetRouteAssociation3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "APISUBNET3"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "APIEC2ROLE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "IamRolePolicy0",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "cloudwatch:GetMetricStatistics",
+                    "cloudwatch:ListMetrics",
+                    "cloudwatch:PutMetricData",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy2",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy3",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::flybits-artifacts",
+                    "arn:aws:s3:::flybits-artifacts/*"
+                  ],
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "APIinstancePROFILE": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "APIEC2ROLE"
+          }
+        ]
+      }
+    },
+    "ProductionAPIasg": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "MinSize": 1,
+        "Tags": [
+          {
+            "Value": "ProductionApiApplicationAutoScalingGroup",
+            "PropagateAtLaunch": "true",
+            "Key": "Name"
+          }
+        ],
+        "MaxSize": 2,
+        "HealthCheckGracePeriod": 600,
+        "LaunchConfigurationName": {
+          "Ref": "ProductionAPILaunch"
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "APISUBNET1"
+          },
+          {
+            "Ref": "APISUBNET2"
+          },
+          {
+            "Ref": "APISUBNET3"
+          }
+        ],
+        "AvailabilityZones": [
+          {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              3,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          }
+        ],
+        "LoadBalancerNames": [
+          {
+            "Ref": "ProductionAPIELB"
+          }
+        ],
+        "HealthCheckType": "ELB"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Authentication": {
+          "S3AccessCreds": {
+            "roleName": {
+              "Ref": "APIEC2ROLE"
+            },
+            "type": "s3"
+          }
+        },
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "D:\\flybits\\CoreAPIs.zip": {
+                "source": "https://s3-us-west-2.amazonaws.com/flybits-artifacts/2.1.0/CoreAPIs.zip",
+                "authentication": "S3AccessCreds"
+              },
+              "C:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\nstack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\nregion=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\ninterval=1\nverbose=1\n"
+                    ]
+                  ]
+                }
+              },
+              "C:\\cfn\\hooks.d\\cfn-init.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-init-hook]\ntriggers=post.update\npath=Resources.",
+                      "ProductionAPIasg",
+                      ".Metadata.AWS::CloudFormation::Init\naction=cfn-init.exe -s \"",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\" -r \"",
+                      "ProductionAPIasg",
+                      "\" --region \"",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\"\n"
+                    ]
+                  ]
+                }
+              }
+            },
+            "sources": {},
+            "commands": {
+              "0_unzip": {
+                "ignoreErrors": true,
+                "command": "c:/\"Program Files\"/7-Zip/7z.exe e D:/flybits/CoreAPIs.zip  -oD:/temp -aoa",
+                "waitAfterCompletion": "0"
+              }
+            },
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-init.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": "PT60S",
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 1
+        }
+      }
+    },
+    "WebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 80,
+            "FromPort": 80,
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": 6
+          },
+          {
+            "ToPort": 443,
+            "FromPort": 443,
+            "CidrIp": "0.0.0.0/0",
+            "IpProtocol": 6
+          },
+          {
+            "ToPort": 3389,
+            "FromPort": 3389,
+            "IpProtocol": 6,
+            "CidrIp": "141.117.160.0/22"
+          }
+        ],
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "GroupDescription": "SecurityGroup",
+        "Tags": [
+          {
+            "Value": "WebSecurityGroup",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "ProductionAPILaunch": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": "TornadoDevKeyPair",
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": 100
+            }
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "InstanceType": "c4.large",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<powershell>\ncfn-init.exe -v -s \"",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "\" -r \"",
+                "ProductionAPIasg",
+                "\" --region \"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\"\n</powershell>\n"
+              ]
+            ]
+          }
+        },
+        "EbsOptimized": "false",
+        "IamInstanceProfile": {
+          "Ref": "APIinstancePROFILE"
+        },
+        "InstanceMonitoring": "true",
+        "AssociatePublicIpAddress": "true",
+        "ImageId": "ami-69795403"
+      }
+    },
+    "ProductionAPIELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "APISUBNET1"
+          },
+          {
+            "Ref": "APISUBNET2"
+          },
+          {
+            "Ref": "APISUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Value": "ProductionAPIELB",
+            "Key": "Name"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": 5,
+          "Interval": 60,
+          "Target": "TCP:443",
+          "Timeout": 59,
+          "UnhealthyThreshold": 5
+        },
+        "Listeners": [
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 80,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          },
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 443,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "Scheme": "internet-facing"
+      }
+    },
+    "ApiScaleInAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionAPIasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "ApiScaleInPolicy"
+          }
+        ],
+        "Threshold": 30,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "ApiScaleInPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": -1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionAPIasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "ApiScaleOutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionAPIasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "ApiScaleOutPolicy"
+          }
+        ],
+        "Threshold": 50,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "ApiScaleOutPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": 1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionAPIasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "DevPortalSUBNET1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.20.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionDevPortalSUBNET1",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "DevPortalSUBNET2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.21.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionDevPortalSUBNET2",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "DevPortalSUBNET3": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            3,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.22.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionDevPortalSUBNET3",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "devportalSubnetRouteAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalSUBNET1"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "devportalSubnetRouteAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalSUBNET2"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "devportalSubnetRouteAssociation3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DevPortalSUBNET3"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "DevPortalEC2ROLE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "IamRolePolicy0",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "cloudwatch:GetMetricStatistics",
+                    "cloudwatch:ListMetrics",
+                    "cloudwatch:PutMetricData",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy2",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy3",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::flybits-artifacts",
+                    "arn:aws:s3:::flybits-artifacts/*"
+                  ],
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "DevPortalinstancePROFILE": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "DevPortalEC2ROLE"
+          }
+        ]
+      }
+    },
+    "ProductionDevPortalasg": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "MinSize": 1,
+        "Tags": [
+          {
+            "Value": "ProductiondevportalApplicationAutoScalingGroup",
+            "PropagateAtLaunch": "true",
+            "Key": "Name"
+          }
+        ],
+        "MaxSize": 2,
+        "HealthCheckGracePeriod": 600,
+        "LaunchConfigurationName": {
+          "Ref": "ProductionDevPortalLaunch"
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "DevPortalSUBNET1"
+          },
+          {
+            "Ref": "DevPortalSUBNET2"
+          },
+          {
+            "Ref": "DevPortalSUBNET3"
+          }
+        ],
+        "AvailabilityZones": [
+          {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              3,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          }
+        ],
+        "LoadBalancerNames": [
+          {
+            "Ref": "ProductionDevPortalELB"
+          }
+        ],
+        "HealthCheckType": "ELB"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Authentication": {
+          "S3AccessCreds": {
+            "roleName": {
+              "Ref": "DevPortalEC2ROLE"
+            },
+            "type": "s3"
+          }
+        },
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "D:\\flybits\\CoreAPIs.zip": {
+                "source": "https://s3-us-west-2.amazonaws.com/flybits-artifacts/2.1.0/DeveloperAPIs.zip",
+                "authentication": "S3AccessCreds"
+              },
+              "C:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\nstack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\nregion=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\ninterval=1\nverbose=1\n"
+                    ]
+                  ]
+                }
+              },
+              "C:\\cfn\\hooks.d\\cfn-init.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-init-hook]\ntriggers=post.update\npath=Resources.",
+                      "ProductionDevPortalasg",
+                      ".Metadata.AWS::CloudFormation::Init\naction=cfn-init.exe -s \"",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\" -r \"",
+                      "ProductionDevPortalasg",
+                      "\" --region \"",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\"\n"
+                    ]
+                  ]
+                }
+              }
+            },
+            "sources": {},
+            "commands": {},
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-init.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": "PT60S",
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 1
+        }
+      }
+    },
+    "ProductionDevPortalLaunch": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": "TornadoDevKeyPair",
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": 100
+            }
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "InstanceType": "c4.large",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<powershell>\ncfn-init.exe -v -s \"",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "\" -r \"",
+                "ProductionDevPortalasg",
+                "\" --region \"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\"\n</powershell>\n"
+              ]
+            ]
+          }
+        },
+        "EbsOptimized": "false",
+        "IamInstanceProfile": {
+          "Ref": "DevPortalinstancePROFILE"
+        },
+        "InstanceMonitoring": "true",
+        "AssociatePublicIpAddress": "true",
+        "ImageId": "ami-9f7855f5"
+      }
+    },
+    "ProductionDevPortalELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "DevPortalSUBNET1"
+          },
+          {
+            "Ref": "DevPortalSUBNET2"
+          },
+          {
+            "Ref": "DevPortalSUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Value": "ProductionDevPortalELB",
+            "Key": "Name"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": 5,
+          "Interval": 60,
+          "Target": "TCP:443",
+          "Timeout": 59,
+          "UnhealthyThreshold": 5
+        },
+        "Listeners": [
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 80,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          },
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 443,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "Scheme": "internet-facing"
+      }
+    },
+    "DevPortalScaleInAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionDevPortalasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "DevPortalScaleInPolicy"
+          }
+        ],
+        "Threshold": 30,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "DevPortalScaleInPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": -1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionDevPortalasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "DevPortalScaleOutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionDevPortalasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "DevPortalScaleOutPolicy"
+          }
+        ],
+        "Threshold": 50,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "DevPortalScaleOutPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": 1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionDevPortalasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "StaffPortalSUBNET1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.30.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionStaffPortalSUBNET1",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "StaffPortalSUBNET2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.31.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionStaffPortalSUBNET2",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "StaffPortalSUBNET3": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            3,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.32.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionStaffPortalSUBNET3",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "staffportalSubnetRouteAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "StaffPortalSUBNET1"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "staffportalSubnetRouteAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "StaffPortalSUBNET2"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "staffportalSubnetRouteAssociation3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "StaffPortalSUBNET3"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "StaffPortalEC2ROLE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "IamRolePolicy0",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "cloudwatch:GetMetricStatistics",
+                    "cloudwatch:ListMetrics",
+                    "cloudwatch:PutMetricData",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy2",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy3",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::flybits-artifacts",
+                    "arn:aws:s3:::flybits-artifacts/*"
+                  ],
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "StaffPortalinstancePROFILE": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "StaffPortalEC2ROLE"
+          }
+        ]
+      }
+    },
+    "ProductionStaffPortalasg": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "MinSize": 1,
+        "Tags": [
+          {
+            "Value": "ProductionstaffportalApplicationAutoScalingGroup",
+            "PropagateAtLaunch": "true",
+            "Key": "Name"
+          }
+        ],
+        "MaxSize": 2,
+        "HealthCheckGracePeriod": 600,
+        "LaunchConfigurationName": {
+          "Ref": "ProductionStaffPortalLaunch"
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "StaffPortalSUBNET1"
+          },
+          {
+            "Ref": "StaffPortalSUBNET2"
+          },
+          {
+            "Ref": "StaffPortalSUBNET3"
+          }
+        ],
+        "AvailabilityZones": [
+          {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              3,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          }
+        ],
+        "LoadBalancerNames": [
+          {
+            "Ref": "ProductionStaffPortalELB"
+          }
+        ],
+        "HealthCheckType": "ELB"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Authentication": {
+          "S3AccessCreds": {
+            "roleName": {
+              "Ref": "StaffPortalEC2ROLE"
+            },
+            "type": "s3"
+          }
+        },
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "D:\\flybits\\CoreAPIs.zip": {
+                "source": "https://s3-us-west-2.amazonaws.com/flybits-artifacts/2.1.0/StaffAPIs.zip",
+                "authentication": "S3AccessCreds"
+              },
+              "C:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\nstack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\nregion=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\ninterval=1\nverbose=1\n"
+                    ]
+                  ]
+                }
+              },
+              "C:\\cfn\\hooks.d\\cfn-init.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-init-hook]\ntriggers=post.update\npath=Resources.",
+                      "ProductionStaffPortalasg",
+                      ".Metadata.AWS::CloudFormation::Init\naction=cfn-init.exe -s \"",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\" -r \"",
+                      "ProductionStaffPortalasg",
+                      "\" --region \"",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\"\n"
+                    ]
+                  ]
+                }
+              }
+            },
+            "sources": {},
+            "commands": {},
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-init.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": "PT60S",
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 1
+        }
+      }
+    },
+    "ProductionStaffPortalLaunch": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": "TornadoDevKeyPair",
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": 100
+            }
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "InstanceType": "c4.large",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<powershell>\ncfn-init.exe -v -s \"",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "\" -r \"",
+                "ProductionStaffPortalasg",
+                "\" --region \"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\"\n</powershell>\n"
+              ]
+            ]
+          }
+        },
+        "EbsOptimized": "false",
+        "IamInstanceProfile": {
+          "Ref": "StaffPortalinstancePROFILE"
+        },
+        "InstanceMonitoring": "true",
+        "AssociatePublicIpAddress": "true",
+        "ImageId": "ami-2079544a"
+      }
+    },
+    "ProductionStaffPortalELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "StaffPortalSUBNET1"
+          },
+          {
+            "Ref": "StaffPortalSUBNET2"
+          },
+          {
+            "Ref": "StaffPortalSUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Value": "ProductionStaffPortalELB",
+            "Key": "Name"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": 5,
+          "Interval": 60,
+          "Target": "TCP:443",
+          "Timeout": 59,
+          "UnhealthyThreshold": 5
+        },
+        "Listeners": [
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 80,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          },
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 443,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "Scheme": "internet-facing"
+      }
+    },
+    "StaffPortalScaleInAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionStaffPortalasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "StaffPortalScaleInPolicy"
+          }
+        ],
+        "Threshold": 30,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "StaffPortalScaleInPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": -1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionStaffPortalasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "StaffPortalScaleOutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionStaffPortalasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "StaffPortalScaleOutPolicy"
+          }
+        ],
+        "Threshold": 50,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "StaffPortalScaleOutPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": 1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionStaffPortalasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "MomentsSUBNET1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.60.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionMomentsSUBNET1",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "MomentsSUBNET2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.61.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionMomentsSUBNET2",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "MomentsSUBNET3": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "ProductionVPCfb"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            3,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.62.0/24",
+        "MapPublicIpOnLaunch": "true",
+        "Tags": [
+          {
+            "Value": "ProductionMomentsSUBNET3",
+            "Key": "Name"
+          }
+        ]
+      }
+    },
+    "momentsSubnetRouteAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "MomentsSUBNET1"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "momentsSubnetRouteAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "MomentsSUBNET2"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "momentsSubnetRouteAssociation3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "MomentsSUBNET3"
+        },
+        "RouteTableId": {
+          "Ref": "ProductionRouteTable"
+        }
+      }
+    },
+    "MomentsEC2ROLE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "IamRolePolicy0",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "cloudwatch:GetMetricStatistics",
+                    "cloudwatch:ListMetrics",
+                    "cloudwatch:PutMetricData",
+                    "ec2:DescribeTags"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy2",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "IamRolePolicy3",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::flybits-artifacts",
+                    "arn:aws:s3:::flybits-artifacts/*"
+                  ],
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "MomentsinstancePROFILE": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "MomentsEC2ROLE"
+          }
+        ]
+      }
+    },
+    "ProductionMomentsasg": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "MinSize": 1,
+        "Tags": [
+          {
+            "Value": "ProductionmomentsApplicationAutoScalingGroup",
+            "PropagateAtLaunch": "true",
+            "Key": "Name"
+          }
+        ],
+        "MaxSize": 2,
+        "HealthCheckGracePeriod": 600,
+        "LaunchConfigurationName": {
+          "Ref": "ProductionMomentsLaunch"
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "MomentsSUBNET1"
+          },
+          {
+            "Ref": "MomentsSUBNET2"
+          },
+          {
+            "Ref": "MomentsSUBNET3"
+          }
+        ],
+        "AvailabilityZones": [
+          {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          {
+            "Fn::Select": [
+              3,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          }
+        ],
+        "LoadBalancerNames": [
+          {
+            "Ref": "ProductionMomentsELB"
+          }
+        ],
+        "HealthCheckType": "ELB"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Authentication": {
+          "S3AccessCreds": {
+            "roleName": {
+              "Ref": "MomentsEC2ROLE"
+            },
+            "type": "s3"
+          }
+        },
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {},
+            "sources": {},
+            "commands": {},
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-init.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": "PT60S",
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 1
+        }
+      }
+    },
+    "ProductionMomentsLaunch": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": "TornadoDevKeyPair",
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": 100
+            }
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "InstanceType": "c4.large",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<powershell>\ncfn-init.exe -v -s \"",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "\" -r \"",
+                "ProductionMomentsasg",
+                "\" --region \"",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\"\n</powershell>\n"
+              ]
+            ]
+          }
+        },
+        "EbsOptimized": "false",
+        "IamInstanceProfile": {
+          "Ref": "MomentsinstancePROFILE"
+        },
+        "InstanceMonitoring": "true",
+        "AssociatePublicIpAddress": "true",
+        "ImageId": "ami-407e532a"
+      }
+    },
+    "ProductionMomentsELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "MomentsSUBNET1"
+          },
+          {
+            "Ref": "MomentsSUBNET2"
+          },
+          {
+            "Ref": "MomentsSUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Value": "ProductionMomentsELB",
+            "Key": "Name"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": 5,
+          "Interval": 60,
+          "Target": "TCP:443",
+          "Timeout": 59,
+          "UnhealthyThreshold": 5
+        },
+        "Listeners": [
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 80,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          },
+          {
+            "InstancePort": 443,
+            "LoadBalancerPort": 443,
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "Scheme": "internet-facing"
+      }
+    },
+    "MomentsScaleInAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionMomentsasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "MomentsScaleInPolicy"
+          }
+        ],
+        "Threshold": 30,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "MomentsScaleInPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": -1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionMomentsasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "MomentsScaleOutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "ProductionMomentsasg"
+            }
+          }
+        ],
+        "EvaluationPeriods": 5,
+        "AlarmActions": [
+          {
+            "Ref": "MomentsScaleOutPolicy"
+          }
+        ],
+        "Threshold": 50,
+        "Statistic": "Average",
+        "Namespace": "AWS/EC2",
+        "Period": 60,
+        "Unit": "Percent",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "MomentsScaleOutPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": 1,
+        "Cooldown": 300,
+        "AutoScalingGroupName": {
+          "Ref": "ProductionMomentsasg"
+        },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    }
+  }
+}

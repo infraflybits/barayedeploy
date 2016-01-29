@@ -1,0 +1,7 @@
+{
+              "0_unzip": {
+                "command": "c:/\"Program Files\"/7-Zip/7z.exe e D:/flybits/CoreAPIs.zip  -oD:/temp -aoa",
+                "ignoreErrors": true,
+                "waitAfterCompletion": "0"
+              }
+}

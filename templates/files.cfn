@@ -1,0 +1,42 @@
+{
+              "C:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\nstack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\nregion=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\ninterval=1\nverbose=1\n"
+                    ]
+                  ]
+                }
+              },
+              "C:\\cfn\\hooks.d\\cfn-init.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-init-hook]\ntriggers=post.update\npath=Resources.",
+                      "APIasg",
+                      ".Metadata.AWS::CloudFormation::Init\naction=cfn-init.exe -s \"",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\" -r \"",
+                      "APIasg",
+                      "\" --region \"",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\"\n"
+                    ]
+                  ]
+                }
+              }
+}
